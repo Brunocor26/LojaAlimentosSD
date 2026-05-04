@@ -5,165 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COMIDA CLONE</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: #ffffff;
-            color: #000000;
-            padding: 2vw;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 50px;
-            font-size: 14px;
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        .logo {
-            font-size: 24px;
-            text-decoration: none;
-            color: #000;
-        }
-
-        .cart {
-            cursor: pointer;
-        }
-
-        /* Grelha de Produtos */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2vw;
-        }
-
-        .product {
-            cursor: pointer;
-        }
-
-        .product-image {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            background-color: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        /* Dica: PNG */
-        .product-image img {
-            width: 70%; 
-            height: auto;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .product:hover .product-image img {
-            transform: scale(1.05); 
-        }
-
-        /* Informação do Produto */
-        .product-info {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 15px;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .product-name {
-            font-weight: bold;
-        }
-
-        .product-price {
-            color: #666;
-        }
-
-        footer {
-            margin-top: 100px;
-            padding-bottom: 20px;
-            text-align: center;
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #999;
-        }
+        /* O CSS mantém-se igual ao de antes */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { background-color: #ffffff; color: #000000; padding: 2vw; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 50px; font-size: 14px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .logo { font-size: 24px; text-decoration: none; color: #000; }
+        .cart { cursor: pointer; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2vw; }
+        .product { cursor: pointer; }
+        .product-image { width: 100%; aspect-ratio: 1 / 1; background-color: #f5f5f5; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .product-image img { width: 70%; height: auto; object-fit: contain; transition: transform 0.3s ease; border-radius: 50%; }
+        .product:hover .product-image img { transform: scale(1.05); }
+        .product-info { display: flex; justify-content: space-between; padding-top: 15px; font-size: 12px; text-transform: uppercase; }
+        .product-name { font-weight: bold; }
+        .product-price { color: #666; }
+        footer { margin-top: 100px; padding-bottom: 20px; text-align: center; font-size: 10px; text-transform: uppercase; color: #999; }
     </style>
 </head>
 <body>
 
     <header>
         <a href="#" class="logo">FOOD</a>
-        <div class="cart" onclick="addToCart()">CART (<span id="cart-count">0</span>)</div>
+        <div class="cart">CART (<span id="cart-count">0</span>)</div>
     </header>
 
-    <main class="product-grid">
-        <!-- Produto 1: A tua Maçã -->
-        <article class="product" onclick="addToCart()">
-            <div class="product-image">
-                <!-- Idealmente, uma maçã sem fundo (PNG) -->
-                <img src="data:image/jpeg;base64,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" alt="Maçã Fresca" style="border-radius: 50%;"> 
-            </div>
-            <div class="product-info">
-                <span class="product-name">MAÇÃ</span>
-                <span class="product-price">0.50€</span>
-            </div>
-        </article>
-
-        <!-- Produto 2 -->
-        <article class="product" onclick="addToCart()">
-            <div class="product-image">
-                <img src="https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bananas">
-            </div>
-            <div class="product-info">
-                <span class="product-name">BANANA (CACHO)</span>
-                <span class="product-price">1.20€</span>
-            </div>
-        </article>
-
-        <!-- Produto 3 -->
-        <article class="product" onclick="addToCart()">
-            <div class="product-image">
-                <img src="https://images.unsplash.com/photo-1528825871115-3581a5387919?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Morango">
-            </div>
-            <div class="product-info">
-                <span class="product-name">MORANGOS (CAIXA)</span>
-                <span class="product-price">2.50€</span>
-            </div>
-        </article>
-
-        <!-- Produto 4 -->
-        <article class="product" onclick="addToCart()">
-            <div class="product-image">
-                <img src="https://images.unsplash.com/photo-1550258987-190a2d41a8ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Ananás">
-            </div>
-            <div class="product-info">
-                <span class="product-name">ANANÁS</span>
-                <span class="product-price">3.00€</span>
-            </div>
-        </article>
+    <!-- Aqui o HTML vai estar vazio no início. O JavaScript vai preenchê-lo! -->
+    <main class="product-grid" id="grid-produtos">
     </main>
 
-    <footer>
-        © 2026 FOOD INC
-    </footer>
+    <footer>© 2026 FOOD INC</footer>
 
     <script>
         let cartCount = 0;
-        
+
+        // Função para carregar produtos da Base de Dados (PostgreSQL via Spring Boot)
+        async function carregarProdutos() {
+            try {
+                // Vai ao teu backend buscar os dados
+                const resposta = await fetch('/api/produtos');
+                const produtos = await resposta.json();
+                
+                const grid = document.getElementById('grid-produtos');
+
+                // Para cada produto que veio do Postgres, cria o HTML
+                produtos.forEach(produto => {
+                    const artigo = document.createElement('article');
+                    artigo.className = 'product';
+                    artigo.onclick = () => addToCart(); // Clicar adiciona ao carrinho
+
+                    artigo.innerHTML = `
+                        <div class="product-image">
+                            <img src="${produto.imagemUrl}" alt="${produto.nome}">
+                        </div>
+                        <div class="product-info">
+                            <span class="product-name">${produto.nome}</span>
+                            <span class="product-price">${produto.preco.toFixed(2)}€</span>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(artigo);
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar produtos:", erro);
+            }
+        }
+
         function addToCart() {
             cartCount++;
             document.getElementById('cart-count').innerText = cartCount;
         }
+
+        // Corre a função mal a página abre
+        carregarProdutos();
     </script>
 </body>
 </html>
