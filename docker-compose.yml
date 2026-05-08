@@ -1,0 +1,22 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: lojasd-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root_password_local
+      MARIADB_DATABASE: lojasd_db
+      MARIADB_USER: lojasd_user
+      MARIADB_PASSWORD: lojasd_password_local
+    ports:
+      - "3306:3306"
+    volumes:
+      - lojasd_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lojasd_data:
