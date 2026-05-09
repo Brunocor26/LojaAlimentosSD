@@ -8,6 +8,8 @@ target/
 .env
 application-local.properties
 src/main/resources/application-local.properties
+CLAUDE.md
+log
 
 ### STS ###
 .apt_generated
