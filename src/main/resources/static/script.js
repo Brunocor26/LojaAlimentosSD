@@ -1,27 +1,45 @@
 let cartCount = 0;
-let cartItems = [];
+let cartItems = []; // Array de objetos {produtoId, nome, preco, quantidade}
 let allProducts = [];
+let currentProduct = null;
 
-// Função para carregar produtos da Base de Dados (PostgreSQL via Spring Boot)
+// Elementos do DOM
+const cartModal = document.getElementById('cart-modal');
+const productModal = document.getElementById('product-modal');
+const cartButton = document.getElementById('cart-button');
+const closeCart = document.getElementById('close-cart');
+const closeProduct = document.getElementById('close-product');
+const cartItemsList = document.getElementById('cart-items-list');
+const cartTotalValue = document.getElementById('cart-total-value');
+const checkoutBtn = document.getElementById('checkout-btn');
+
+// Elementos do Modal de Produto
+const modalProductImg = document.getElementById('modal-product-img');
+const modalProductName = document.getElementById('modal-product-name');
+const modalProductPrice = document.getElementById('modal-product-price');
+const modalProductStock = document.getElementById('modal-product-stock');
+const productQuantityInput = document.getElementById('product-quantity');
+const qtyMinus = document.getElementById('qty-minus');
+const qtyPlus = document.getElementById('qty-plus');
+const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+// Função para carregar produtos
 async function carregarProdutos() {
     try {
-        // Vai ao teu backend buscar os dados
         const resposta = await fetch('/api/produtos');
         allProducts = await resposta.json();
         
         const grid = document.getElementById('grid-produtos');
-        grid.innerHTML = ''; // Limpar a grid antes de recarregar
+        grid.innerHTML = '';
 
-        // Para cada produto que veio do Postgres, cria o HTML
         allProducts.forEach(produto => {
             const artigo = document.createElement('article');
             artigo.className = 'product';
-            // Se não houver stock, adicionar uma classe visual ou desativar o clique
             if (produto.stock <= 0) {
                 artigo.classList.add('out-of-stock');
             }
 
-            artigo.onclick = () => addToCart(produto.id, produto.stock); // Clicar adiciona ao carrinho
+            artigo.onclick = () => openProductModal(produto);
 
             artigo.innerHTML = `
                 <div class="product-image">
@@ -43,48 +61,158 @@ async function carregarProdutos() {
     }
 }
 
-async function addToCart(id, stockAtual) {
-    if (stockAtual <= 0) {
+function openProductModal(produto) {
+    if (produto.stock <= 0) {
         alert("Desculpe, este produto está esgotado!");
         return;
     }
+    currentProduct = produto;
+    modalProductImg.src = produto.imagemUrl;
+    modalProductName.innerText = produto.nome;
+    modalProductPrice.innerText = produto.preco.toFixed(2) + "€";
+    modalProductStock.innerText = "STOCK DISPONÍVEL: " + produto.stock;
+    productQuantityInput.value = 1;
+    productModal.style.display = "block";
+}
+
+qtyMinus.onclick = () => {
+    let val = parseInt(productQuantityInput.value);
+    if (val > 1) productQuantityInput.value = val - 1;
+};
+
+qtyPlus.onclick = () => {
+    let val = parseInt(productQuantityInput.value);
+    if (val < currentProduct.stock) productQuantityInput.value = val + 1;
+};
+
+addToCartBtn.onclick = () => {
+    const qtd = parseInt(productQuantityInput.value);
+    
+    // Verificar se já existe no carrinho para validar stock total
+    const itemExistente = cartItems.find(item => item.produtoId === currentProduct.id);
+    const qtdNoCarrinho = itemExistente ? itemExistente.quantidade : 0;
+
+    if (qtd + qtdNoCarrinho > currentProduct.stock) {
+        alert("Não há stock suficiente!");
+        return;
+    }
+
+    if (itemExistente) {
+        itemExistente.quantidade += qtd;
+    } else {
+        cartItems.push({
+            produtoId: currentProduct.id,
+            nome: currentProduct.nome,
+            preco: currentProduct.preco,
+            quantidade: qtd
+        });
+    }
+
+    cartCount += qtd;
+    updateCartUI();
+    productModal.style.display = "none";
+};
+
+function updateCartUI() {
+    document.getElementById('cart-count').innerText = cartCount;
+    
+    // Garantir que mostramos o conteúdo normal do carrinho (caso estivesse em modo sucesso)
+    const modalContent = cartModal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+        <span class="close" id="close-cart">&times;</span>
+        <h2>O Teu Carrinho</h2>
+        <div id="cart-items-list"></div>
+        <div class="cart-total">
+            Total: <span id="cart-total-value">0.00</span>€
+        </div>
+        <button id="checkout-btn" class="checkout-button">Finalizar Compra</button>
+    `;
+
+    // Re-atribuir eventos e referências pois o HTML foi resetado
+    document.getElementById('close-cart').onclick = () => cartModal.style.display = "none";
+    const newCheckoutBtn = document.getElementById('checkout-btn');
+    newCheckoutBtn.onclick = finalizarCompra;
+
+    const listContainer = document.getElementById('cart-items-list');
+    const totalSpan = document.getElementById('cart-total-value');
+    
+    let total = 0;
+    cartItems.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'cart-item';
+        itemDiv.innerHTML = `
+            <span>${item.nome} x${item.quantidade}</span>
+            <span>${(item.preco * item.quantidade).toFixed(2)}€</span>
+        `;
+        listContainer.appendChild(itemDiv);
+        total += item.preco * item.quantidade;
+    });
+
+    totalSpan.innerText = total.toFixed(2);
+}
+
+// Abrir/Fechar Modais
+cartButton.onclick = () => {
+    updateCartUI();
+    cartModal.style.display = "block";
+};
+closeProduct.onclick = () => productModal.style.display = "none";
+
+window.onclick = (event) => {
+    if (event.target == cartModal) cartModal.style.display = "none";
+    if (event.target == productModal) productModal.style.display = "none";
+};
+
+// Checkout
+async function finalizarCompra() {
+    if (cartItems.length === 0) {
+        alert("O teu carrinho está vazio!");
+        return;
+    }
+
+    const payload = {
+        itens: cartItems.map(item => ({
+            produtoId: item.produtoId,
+            quantidade: item.quantidade
+        }))
+    };
 
     try {
-        const resposta = await fetch(`/api/produtos/${id}/diminuir-stock`, {
-            method: 'POST'
+        const resposta = await fetch('/api/vendas/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
         });
 
         if (resposta.ok) {
-            cartCount++;
-            document.getElementById('cart-count').innerText = cartCount;
-            
-            // Adicionar o produto à lista do carrinho (localmente)
-            const produto = allProducts.find(p => p.id === id);
-            if (produto) {
-                cartItems.push(produto);
-            }
-
-            // Recarregar os produtos para atualizar o stock na UI
-            carregarProdutos();
+            showSuccessState();
+            cartItems = [];
+            cartCount = 0;
+            document.getElementById('cart-count').innerText = "0";
+            carregarProdutos(); // Recarregar para atualizar stocks
         } else {
             const erroMsg = await resposta.text();
-            alert(erroMsg);
+            alert("Erro na compra: " + erroMsg);
         }
     } catch (erro) {
-        console.error("Erro ao adicionar ao carrinho:", erro);
+        console.error("Erro no checkout:", erro);
+        alert("Erro ao processar a compra.");
     }
 }
 
-// Evento ao clicar no botão do carrinho
-document.querySelector('.cart').addEventListener('click', () => {
-    if (cartItems.length === 0) {
-        alert("O teu carrinho está vazio!");
-    } else {
-        const listaProdutos = cartItems.map(p => `- ${p.nome}: ${p.preco.toFixed(2)}€`).join('\n');
-        const total = cartItems.reduce((sum, p) => sum + p.preco, 0);
-        alert(`Produtos no Carrinho:\n${listaProdutos}\n\nTotal: ${total.toFixed(2)}€`);
-    }
-});
+function showSuccessState() {
+    const modalContent = cartModal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+        <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>OBRIGADO!</h2>
+            <p>A tua compra foi processada com sucesso.</p>
+            <button class="checkout-button" onclick="document.getElementById('cart-modal').style.display='none'">CONTINUAR A COMPRAR</button>
+        </div>
+    `;
+}
 
-// Corre a função mal a página abre
+// Inicializar
 carregarProdutos();

@@ -11,8 +11,51 @@
 
     <header>
         <a href="#" class="logo">FOOD</a>
-        <div class="cart">CART (<span id="cart-count">0</span>)</div>
+        <div class="cart" id="cart-button">CART (<span id="cart-count">0</span>)</div>
     </header>
+
+    <!-- Modal do Carrinho -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-cart">&times;</span>
+            <h2>O Teu Carrinho</h2>
+            <div id="cart-items-list">
+                <!-- Itens serão inseridos aqui -->
+            </div>
+            <div class="cart-total">
+                Total: <span id="cart-total-value">0.00</span>€
+            </div>
+            <button id="checkout-btn" class="checkout-button">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Produto (Estilo Yeezy) -->
+    <div id="product-modal" class="modal">
+        <div class="product-modal-content">
+            <span class="close" id="close-product">&times;</span>
+            <div class="product-details-container">
+                <div class="product-details-image">
+                    <img id="modal-product-img" src="" alt="">
+                </div>
+                <div class="product-details-info">
+                    <h1 id="modal-product-name"></h1>
+                    <p id="modal-product-price"></p>
+                    <p id="modal-product-stock"></p>
+                    
+                    <div class="quantity-selector">
+                        <label for="quantity">QUANTIDADE:</label>
+                        <div class="quantity-controls">
+                            <button id="qty-minus">-</button>
+                            <input type="number" id="product-quantity" value="1" min="1">
+                            <button id="qty-plus">+</button>
+                        </div>
+                    </div>
+                    
+                    <button id="add-to-cart-btn" class="checkout-button">ADICIONAR AO CARRINHO</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="product-grid" id="grid-produtos">
     </main>
