@@ -6,12 +6,30 @@
     <title>FOOD SHOP</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .nav-direita { display: flex; align-items: center; gap: 24px; }
+        #info-utilizador { display: none; align-items: center; gap: 12px; }
+        #auth-botoes { display: flex; gap: 16px; }
+        #auth-botoes a { text-decoration: none; color: #000; }
+        #auth-botoes a:hover { text-decoration: underline; }
+        #btn-logout { background: none; border: none; cursor: pointer; font-size: 14px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; padding: 0; }
+    </style>
 </head>
 <body>
 
     <header>
-        <a href="#" class="logo">FOOD</a>
-        <div class="cart">CART (<span id="cart-count">0</span>)</div>
+        <a href="/index.html" class="logo">FOOD</a>
+        <div class="nav-direita">
+            <div id="info-utilizador">
+                <span id="nome-utilizador"></span>
+                <button id="btn-logout" onclick="fazerLogout()">Sair</button>
+            </div>
+            <div id="auth-botoes">
+                <a href="/login.html">Entrar</a>
+                <a href="/registar.html">Registar</a>
+            </div>
+            <div class="cart">CART (<span id="cart-count">0</span>)</div>
+        </div>
     </header>
 
     <main class="product-grid" id="grid-produtos">
@@ -19,6 +37,16 @@
 
     <footer>© 2026 FOOD INC</footer>
 
+    <script src="/js/auth.js"></script>
     <script src="script.js"></script>
+    <script>
+        verificarAutenticacao().then(utilizador => {
+            if (utilizador) {
+                document.getElementById('nome-utilizador').textContent = utilizador.nome;
+                document.getElementById('info-utilizador').style.display = 'flex';
+                document.getElementById('auth-botoes').style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
