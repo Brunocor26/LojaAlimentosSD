@@ -28,14 +28,8 @@ public class SecurityConfig {
     @Autowired
     private ClienteService clienteService;
 
-    /**
-     * Encoder BCrypt para as passwords.
-     * Custo 10 é o valor padrão e adequado para produção.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Provider de autenticação que usa o ClienteService para carregar
@@ -44,7 +38,7 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(clienteService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
