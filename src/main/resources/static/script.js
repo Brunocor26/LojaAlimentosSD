@@ -23,6 +23,9 @@ const qtyMinus = document.getElementById('qty-minus');
 const qtyPlus = document.getElementById('qty-plus');
 const addToCartBtn = document.getElementById('add-to-cart-btn');
 
+// Guardar o HTML original do carrinho para poder restaurar após sucesso
+const originalCartHTML = cartModal.querySelector('.modal-content').innerHTML;
+
 // Função para carregar produtos
 async function carregarProdutos() {
     try {
@@ -30,6 +33,7 @@ async function carregarProdutos() {
         allProducts = await resposta.json();
         
         const grid = document.getElementById('grid-produtos');
+        if (!grid) return;
         grid.innerHTML = '';
 
         allProducts.forEach(produto => {
@@ -75,67 +79,74 @@ function openProductModal(produto) {
     productModal.style.display = "block";
 }
 
-qtyMinus.onclick = () => {
-    let val = parseInt(productQuantityInput.value);
-    if (val > 1) productQuantityInput.value = val - 1;
-};
+if (qtyMinus) {
+    qtyMinus.onclick = () => {
+        let val = parseInt(productQuantityInput.value);
+        if (val > 1) productQuantityInput.value = val - 1;
+    };
+}
 
-qtyPlus.onclick = () => {
-    let val = parseInt(productQuantityInput.value);
-    if (val < currentProduct.stock) productQuantityInput.value = val + 1;
-};
+if (qtyPlus) {
+    qtyPlus.onclick = () => {
+        let val = parseInt(productQuantityInput.value);
+        if (val < currentProduct.stock) productQuantityInput.value = val + 1;
+    };
+}
 
-addToCartBtn.onclick = () => {
-    const qtd = parseInt(productQuantityInput.value);
-    
-    // Verificar se já existe no carrinho para validar stock total
-    const itemExistente = cartItems.find(item => item.produtoId === currentProduct.id);
-    const qtdNoCarrinho = itemExistente ? itemExistente.quantidade : 0;
+if (addToCartBtn) {
+    addToCartBtn.onclick = () => {
+        const qtd = parseInt(productQuantityInput.value);
+        
+        // Verificar se já existe no carrinho para validar stock total
+        const itemExistente = cartItems.find(item => item.produtoId === currentProduct.id);
+        const qtdNoCarrinho = itemExistente ? itemExistente.quantidade : 0;
 
-    if (qtd + qtdNoCarrinho > currentProduct.stock) {
-        alert("Não há stock suficiente!");
-        return;
-    }
+        if (qtd + qtdNoCarrinho > currentProduct.stock) {
+            alert("Não há stock suficiente!");
+            return;
+        }
 
-    if (itemExistente) {
-        itemExistente.quantidade += qtd;
-    } else {
-        cartItems.push({
-            produtoId: currentProduct.id,
-            nome: currentProduct.nome,
-            preco: currentProduct.preco,
-            quantidade: qtd
-        });
-    }
+        if (itemExistente) {
+            itemExistente.quantidade += qtd;
+        } else {
+            cartItems.push({
+                produtoId: currentProduct.id,
+                nome: currentProduct.nome,
+                preco: currentProduct.preco,
+                quantidade: qtd
+            });
+        }
 
-    cartCount += qtd;
-    updateCartUI();
-    productModal.style.display = "none";
-};
+        cartCount += qtd;
+        updateCartCountUI();
+        productModal.style.display = "none";
+    };
+}
+
+function updateCartCountUI() {
+    const countSpan = document.getElementById('cart-count');
+    if (countSpan) countSpan.innerText = cartCount;
+}
 
 function updateCartUI() {
-    document.getElementById('cart-count').innerText = cartCount;
+    updateCartCountUI();
     
-    // Garantir que mostramos o conteúdo normal do carrinho (caso estivesse em modo sucesso)
     const modalContent = cartModal.querySelector('.modal-content');
-    modalContent.innerHTML = `
-        <span class="close" id="close-cart">&times;</span>
-        <h2>O Teu Carrinho</h2>
-        <div id="cart-items-list"></div>
-        <div class="cart-total">
-            Total: <span id="cart-total-value">0.00</span>€
-        </div>
-        <button id="checkout-btn" class="checkout-button">Finalizar Compra</button>
-    `;
-
-    // Re-atribuir eventos e referências pois o HTML foi resetado
-    document.getElementById('close-cart').onclick = () => cartModal.style.display = "none";
-    const newCheckoutBtn = document.getElementById('checkout-btn');
-    newCheckoutBtn.onclick = finalizarCompra;
+    
+    // Se estivermos na mensagem de sucesso, restauramos o layout
+    if (modalContent.querySelector('.success-message')) {
+        modalContent.innerHTML = originalCartHTML;
+        // Re-atribuir eventos básicos que foram perdidos ao sobrescrever innerHTML
+        document.getElementById('close-cart').onclick = () => cartModal.style.display = "none";
+        document.getElementById('checkout-btn').onclick = finalizarCompra;
+    }
 
     const listContainer = document.getElementById('cart-items-list');
     const totalSpan = document.getElementById('cart-total-value');
     
+    if (!listContainer || !totalSpan) return;
+
+    listContainer.innerHTML = '';
     let total = 0;
     cartItems.forEach(item => {
         const itemDiv = document.createElement('div');
@@ -147,15 +158,26 @@ function updateCartUI() {
             </div>
             <div class="cart-item-actions">
                 <div class="cart-qty-controls">
-                    <button onclick="changeQuantityInCart(${item.produtoId}, -1)">-</button>
+                    <button class="btn-minus" data-id="${item.produtoId}">-</button>
                     <span>${item.quantidade}</span>
-                    <button onclick="changeQuantityInCart(${item.produtoId}, 1)">+</button>
+                    <button class="btn-plus" data-id="${item.produtoId}">+</button>
                 </div>
-                <button class="remove-item" onclick="removeFromCart(${item.produtoId})">Remover</button>
+                <button class="remove-item" data-id="${item.produtoId}">Remover</button>
             </div>
         `;
         listContainer.appendChild(itemDiv);
         total += item.preco * item.quantidade;
+    });
+
+    // Re-atribuir eventos aos botões dos itens
+    listContainer.querySelectorAll('.btn-minus').forEach(btn => {
+        btn.onclick = () => changeQuantityInCart(parseInt(btn.dataset.id), -1);
+    });
+    listContainer.querySelectorAll('.btn-plus').forEach(btn => {
+        btn.onclick = () => changeQuantityInCart(parseInt(btn.dataset.id), 1);
+    });
+    listContainer.querySelectorAll('.remove-item').forEach(btn => {
+        btn.onclick = () => removeFromCart(parseInt(btn.dataset.id));
     });
 
     totalSpan.innerText = total.toFixed(2);
@@ -194,11 +216,17 @@ function removeFromCart(produtoId) {
 }
 
 // Abrir/Fechar Modais
-cartButton.onclick = () => {
-    updateCartUI();
-    cartModal.style.display = "block";
-};
-closeProduct.onclick = () => productModal.style.display = "none";
+if (cartButton) {
+    cartButton.onclick = () => {
+        updateCartUI();
+        cartModal.style.display = "block";
+    };
+}
+
+if (closeCart) closeCart.onclick = () => cartModal.style.display = "none";
+if (closeProduct) closeProduct.onclick = () => productModal.style.display = "none";
+
+if (checkoutBtn) checkoutBtn.onclick = finalizarCompra;
 
 window.onclick = (event) => {
     if (event.target == cartModal) cartModal.style.display = "none";
@@ -209,6 +237,14 @@ window.onclick = (event) => {
 async function finalizarCompra() {
     if (cartItems.length === 0) {
         alert("O teu carrinho está vazio!");
+        return;
+    }
+
+    // Verificar se o utilizador está autenticado antes de finalizar
+    const utilizador = await verificarAutenticacao();
+    if (!utilizador) {
+        alert("Deves entrar na tua conta para finalizar a compra.");
+        window.location.href = '/login.html';
         return;
     }
 
@@ -232,7 +268,7 @@ async function finalizarCompra() {
             showSuccessState();
             cartItems = [];
             cartCount = 0;
-            document.getElementById('cart-count').innerText = "0";
+            updateCartCountUI();
             carregarProdutos(); // Recarregar para atualizar stocks
         } else {
             const erroMsg = await resposta.text();
@@ -251,9 +287,10 @@ function showSuccessState() {
             <div class="success-icon">✓</div>
             <h2>OBRIGADO!</h2>
             <p>A tua compra foi processada com sucesso.</p>
-            <button class="checkout-button" onclick="document.getElementById('cart-modal').style.display='none'">CONTINUAR A COMPRAR</button>
+            <button class="checkout-button" id="btn-continuar">CONTINUAR A COMPRAR</button>
         </div>
     `;
+    document.getElementById('btn-continuar').onclick = () => cartModal.style.display = 'none';
 }
 
 // Inicializar
