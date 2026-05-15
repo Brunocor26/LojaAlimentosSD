@@ -74,10 +74,13 @@ public class SecurityConfig {
                 // Produtos e categorias — leitura pública
                 .requestMatchers(HttpMethod.GET, "/api/produtos/**", "/api/categorias/**").permitAll()
 
-                // Gestão de produtos — apenas ADMIN
+                // Gestão de produtos e categorias — apenas ADMIN
                 .requestMatchers(HttpMethod.POST, "/api/produtos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/categorias/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/categorias/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/categorias/**").hasRole("ADMIN")
 
                 // Estatísticas — apenas ADMIN
                 .requestMatchers("/api/estatisticas/**").hasRole("ADMIN")
