@@ -1,4 +1,8 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.service;
+import ubi.sd.lojasd.model.Cliente;
+import ubi.sd.lojasd.dto.RegistarRequest;
+import ubi.sd.lojasd.dto.ClienteResponse;
+import ubi.sd.lojasd.repository.ClienteRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

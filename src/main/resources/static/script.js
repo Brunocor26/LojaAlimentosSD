@@ -25,16 +25,23 @@ const addToCartBtn = document.getElementById('add-to-cart-btn');
 
 // Função para carregar produtos
 async function carregarProdutos() {
+    console.log("Iniciando carregamento de produtos...");
     try {
         const resposta = await fetch('/api/produtos');
+        console.log("Resposta da API recebida:", resposta.status);
         allProducts = await resposta.json();
-        
-        const grid = document.getElementById('grid-produtos');
-        grid.innerHTML = '';
+        console.log("Produtos carregados:", allProducts.length);
 
-        allProducts.forEach(produto => {
-            const artigo = document.createElement('article');
-            artigo.className = 'product';
+        const grid = document.getElementById('grid-produtos');
+        if (!grid) {
+            console.error("ERRO: Elemento 'grid-produtos' não encontrado!");
+            return;
+        }
+        grid.innerHTML = '';
+allProducts.forEach(produto => {
+    console.log("Renderizando produto:", produto.nome);
+    const artigo = document.createElement('article');
+    artigo.className = 'product';
             if (produto.stock <= 0) {
                 artigo.classList.add('out-of-stock');
             }
@@ -141,14 +148,56 @@ function updateCartUI() {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'cart-item';
         itemDiv.innerHTML = `
-            <span>${item.nome} x${item.quantidade}</span>
-            <span>${(item.preco * item.quantidade).toFixed(2)}€</span>
+            <div class="cart-item-info">
+                <span class="cart-item-name">${item.nome}</span>
+                <span class="cart-item-price">${item.preco.toFixed(2)}€</span>
+            </div>
+            <div class="cart-item-actions">
+                <div class="cart-qty-controls">
+                    <button onclick="changeQuantityInCart(${item.produtoId}, -1)">-</button>
+                    <span>${item.quantidade}</span>
+                    <button onclick="changeQuantityInCart(${item.produtoId}, 1)">+</button>
+                </div>
+                <button class="remove-item" onclick="removeFromCart(${item.produtoId})">Remover</button>
+            </div>
         `;
         listContainer.appendChild(itemDiv);
         total += item.preco * item.quantidade;
     });
 
     totalSpan.innerText = total.toFixed(2);
+}
+
+function changeQuantityInCart(produtoId, delta) {
+    const item = cartItems.find(i => i.produtoId === produtoId);
+    if (!item) return;
+
+    const produtoOriginal = allProducts.find(p => p.id === produtoId);
+    
+    if (delta > 0) {
+        if (item.quantidade + delta > produtoOriginal.stock) {
+            alert("Não há stock suficiente!");
+            return;
+        }
+    }
+
+    item.quantidade += delta;
+    cartCount += delta;
+
+    if (item.quantidade <= 0) {
+        removeFromCart(produtoId);
+    } else {
+        updateCartUI();
+    }
+}
+
+function removeFromCart(produtoId) {
+    const itemIndex = cartItems.findIndex(i => i.produtoId === produtoId);
+    if (itemIndex > -1) {
+        cartCount -= cartItems[itemIndex].quantidade;
+        cartItems.splice(itemIndex, 1);
+        updateCartUI();
+    }
 }
 
 // Abrir/Fechar Modais

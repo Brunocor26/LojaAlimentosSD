@@ -1,4 +1,5 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.dto;
+import ubi.sd.lojasd.model.Cliente;
 
 /**
  * DTO de resposta com os dados do cliente autenticado.

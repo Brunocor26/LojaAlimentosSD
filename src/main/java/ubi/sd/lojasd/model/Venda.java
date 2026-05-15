@@ -1,4 +1,4 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

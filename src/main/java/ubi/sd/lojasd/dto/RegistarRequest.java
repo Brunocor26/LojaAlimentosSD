@@ -1,4 +1,4 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

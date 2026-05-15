@@ -1,14 +1,28 @@
-package ubi.sd.lojasd;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+package ubi.sd.lojasd.controller;
+import ubi.sd.lojasd.model.ItemVenda;
+import ubi.sd.lojasd.model.Cliente;
+import ubi.sd.lojasd.repository.ItemVendaRepository;
+import ubi.sd.lojasd.model.Venda;
+import ubi.sd.lojasd.repository.ProdutoRepository;
+import ubi.sd.lojasd.dto.CheckoutItem;
+import ubi.sd.lojasd.dto.CheckoutRequest;
+import ubi.sd.lojasd.repository.ClienteRepository;
+import ubi.sd.lojasd.repository.VendaRepository;
+import ubi.sd.lojasd.model.Produto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.Principal;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/vendas")
@@ -28,16 +42,18 @@ public class VendaController {
 
     @PostMapping("/checkout")
     @Transactional
-    public ResponseEntity<?> checkout(@RequestBody CheckoutRequest request) {
+    public ResponseEntity<?> checkout(@RequestBody CheckoutRequest request, Principal principal) {
         if (request.getItens() == null || request.getItens().isEmpty()) {
             return ResponseEntity.badRequest().body("Carrinho vazio!");
         }
 
-        // Para este exemplo, vamos buscar o primeiro cliente ou criar um dummy
-        Cliente cliente = clienteRepository.findAll().stream().findFirst().orElseGet(() -> {
-            Cliente novoCliente = new Cliente("Cliente Padrão", "cliente@exemplo.com");
-            return clienteRepository.save(novoCliente);
-        });
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Deves iniciar sessão para finalizar a compra.");
+        }
+
+        String email = principal.getName();
+        Cliente cliente = clienteRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado para o email: " + email));
 
         Venda venda = new Venda();
         venda.setDataVenda(LocalDateTime.now());
@@ -67,9 +83,6 @@ public class VendaController {
             itemVenda.setVenda(vendaSalva);
             itemVenda.setProduto(produto);
             itemVenda.setQuantidade(itemReq.getQuantidade());
-            
-            // Aqui poderíamos guardar o preço unitário se tivéssemos o campo, 
-            // mas como foi pedido para remover, não o fazemos.
             
             BigDecimal subtotal = BigDecimal.valueOf(produto.getPreco()).multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
             valorTotal = valorTotal.add(subtotal);

@@ -1,4 +1,8 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.controller;
+import ubi.sd.lojasd.service.ClienteService;
+import ubi.sd.lojasd.dto.LoginRequest;
+import ubi.sd.lojasd.dto.RegistarRequest;
+import ubi.sd.lojasd.dto.ClienteResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
