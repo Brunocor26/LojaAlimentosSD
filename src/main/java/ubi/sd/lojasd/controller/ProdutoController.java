@@ -1,4 +1,6 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.controller;
+import ubi.sd.lojasd.repository.ProdutoRepository;
+import ubi.sd.lojasd.model.Produto;
 
 import java.util.List;
 

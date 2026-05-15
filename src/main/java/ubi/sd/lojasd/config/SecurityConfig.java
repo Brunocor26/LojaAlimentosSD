@@ -1,4 +1,6 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.config;
+import ubi.sd.lojasd.service.ClienteService;
+import ubi.sd.lojasd.controller.AuthController;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,16 +28,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private ClienteService clienteService;
 
-    /**
-     * Encoder BCrypt para as passwords.
-     * Custo 10 é o valor padrão e adequado para produção.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Provider de autenticação que usa o ClienteService para carregar
@@ -44,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(clienteService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 

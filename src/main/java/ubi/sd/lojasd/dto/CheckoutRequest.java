@@ -1,4 +1,4 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.dto;
 
 import java.util.List;
 

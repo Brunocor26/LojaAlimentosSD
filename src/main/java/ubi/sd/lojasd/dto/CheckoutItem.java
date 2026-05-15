@@ -1,4 +1,4 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.dto;
 
 public class CheckoutItem {
     private Long produtoId;

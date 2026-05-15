@@ -25,16 +25,23 @@ const addToCartBtn = document.getElementById('add-to-cart-btn');
 
 // Função para carregar produtos
 async function carregarProdutos() {
+    console.log("Iniciando carregamento de produtos...");
     try {
         const resposta = await fetch('/api/produtos');
+        console.log("Resposta da API recebida:", resposta.status);
         allProducts = await resposta.json();
-        
-        const grid = document.getElementById('grid-produtos');
-        grid.innerHTML = '';
+        console.log("Produtos carregados:", allProducts.length);
 
-        allProducts.forEach(produto => {
-            const artigo = document.createElement('article');
-            artigo.className = 'product';
+        const grid = document.getElementById('grid-produtos');
+        if (!grid) {
+            console.error("ERRO: Elemento 'grid-produtos' não encontrado!");
+            return;
+        }
+        grid.innerHTML = '';
+allProducts.forEach(produto => {
+    console.log("Renderizando produto:", produto.nome);
+    const artigo = document.createElement('article');
+    artigo.className = 'product';
             if (produto.stock <= 0) {
                 artigo.classList.add('out-of-stock');
             }
