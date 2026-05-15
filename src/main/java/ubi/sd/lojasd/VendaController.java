@@ -1,14 +1,17 @@
 package ubi.sd.lojasd;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/vendas")
@@ -33,7 +36,6 @@ public class VendaController {
             return ResponseEntity.badRequest().body("Carrinho vazio!");
         }
 
-        // Para este exemplo, vamos buscar o primeiro cliente ou criar um dummy
         Cliente cliente = clienteRepository.findAll().stream().findFirst().orElseGet(() -> {
             Cliente novoCliente = new Cliente("Cliente Padrão", "cliente@exemplo.com");
             return clienteRepository.save(novoCliente);
