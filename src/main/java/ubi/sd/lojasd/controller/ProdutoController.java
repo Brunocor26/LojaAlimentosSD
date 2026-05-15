@@ -1,6 +1,10 @@
 package ubi.sd.lojasd.controller;
-import ubi.sd.lojasd.repository.ProdutoRepository;
+
+import ubi.sd.lojasd.dto.ProdutoRequest;
+import ubi.sd.lojasd.model.Categoria;
 import ubi.sd.lojasd.model.Produto;
+import ubi.sd.lojasd.repository.CategoriaRepository;
+import ubi.sd.lojasd.repository.ProdutoRepository;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;

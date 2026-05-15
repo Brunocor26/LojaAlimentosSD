@@ -1,4 +1,7 @@
-package ubi.sd.lojasd;
+package ubi.sd.lojasd.controller;
+
+import ubi.sd.lojasd.model.Categoria;
+import ubi.sd.lojasd.repository.CategoriaRepository;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
