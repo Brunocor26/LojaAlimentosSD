@@ -32,13 +32,12 @@
         </div>
     </header>
 
-    <!-- Modal do Carrinho -->
     <div id="cart-modal" class="modal">
         <div class="modal-content">
             <span class="close" id="close-cart">&times;</span>
             <h2>O Teu Carrinho</h2>
             <div id="cart-items-list">
-                <!-- Itens serão inseridos aqui -->
+
             </div>
             <div class="cart-total">
                 Total: <span id="cart-total-value">0.00</span>€
@@ -47,7 +46,6 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes do Produto (Estilo Yeezy) -->
     <div id="product-modal" class="modal">
         <div class="product-modal-content">
             <span class="close" id="close-product">&times;</span>
@@ -89,7 +87,7 @@
                 document.getElementById('info-utilizador').style.display = 'flex';
                 document.getElementById('auth-botoes').style.display = 'none';
             }
-            // Forçar carregamento/renderização após o check de auth
+            // Forçar renderização após o check de auth
             if (typeof carregarProdutos === 'function') {
                 carregarProdutos();
             }
