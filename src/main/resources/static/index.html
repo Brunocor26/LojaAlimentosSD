@@ -3,80 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMIDA CLONE</title>
-    <style>
-        /* O CSS mantém-se igual ao de antes */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-        body { background-color: #ffffff; color: #000000; padding: 2vw; }
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 50px; font-size: 14px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        .logo { font-size: 24px; text-decoration: none; color: #000; }
-        .cart { cursor: pointer; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2vw; }
-        .product { cursor: pointer; }
-        .product-image { width: 100%; aspect-ratio: 1 / 1; background-color: #f5f5f5; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .product-image img { width: 70%; height: auto; object-fit: contain; transition: transform 0.3s ease; border-radius: 50%; }
-        .product:hover .product-image img { transform: scale(1.05); }
-        .product-info { display: flex; justify-content: space-between; padding-top: 15px; font-size: 12px; text-transform: uppercase; }
-        .product-name { font-weight: bold; }
-        .product-price { color: #666; }
-        footer { margin-top: 100px; padding-bottom: 20px; text-align: center; font-size: 10px; text-transform: uppercase; color: #999; }
-    </style>
+    <title>FOOD SHOP</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
         <a href="#" class="logo">FOOD</a>
-        <div class="cart">CART (<span id="cart-count">0</span>)</div>
+        <div class="cart" id="cart-button">CART (<span id="cart-count">0</span>)</div>
     </header>
 
-    <!-- Aqui o HTML vai estar vazio no início. O JavaScript vai preenchê-lo! -->
+    <!-- Modal do Carrinho -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-cart">&times;</span>
+            <h2>O Teu Carrinho</h2>
+            <div id="cart-items-list">
+                <!-- Itens serão inseridos aqui -->
+            </div>
+            <div class="cart-total">
+                Total: <span id="cart-total-value">0.00</span>€
+            </div>
+            <button id="checkout-btn" class="checkout-button">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Produto (Estilo Yeezy) -->
+    <div id="product-modal" class="modal">
+        <div class="product-modal-content">
+            <span class="close" id="close-product">&times;</span>
+            <div class="product-details-container">
+                <div class="product-details-image">
+                    <img id="modal-product-img" src="" alt="">
+                </div>
+                <div class="product-details-info">
+                    <h1 id="modal-product-name"></h1>
+                    <p id="modal-product-price"></p>
+                    <p id="modal-product-stock"></p>
+                    
+                    <div class="quantity-selector">
+                        <label for="quantity">QUANTIDADE:</label>
+                        <div class="quantity-controls">
+                            <button id="qty-minus">-</button>
+                            <input type="number" id="product-quantity" value="1" min="1">
+                            <button id="qty-plus">+</button>
+                        </div>
+                    </div>
+                    
+                    <button id="add-to-cart-btn" class="checkout-button">ADICIONAR AO CARRINHO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="product-grid" id="grid-produtos">
     </main>
 
     <footer>© 2026 FOOD INC</footer>
 
-    <script>
-        let cartCount = 0;
-
-        // Função para carregar produtos da Base de Dados (PostgreSQL via Spring Boot)
-        async function carregarProdutos() {
-            try {
-                // Vai ao teu backend buscar os dados
-                const resposta = await fetch('/api/produtos');
-                const produtos = await resposta.json();
-                
-                const grid = document.getElementById('grid-produtos');
-
-                // Para cada produto que veio do Postgres, cria o HTML
-                produtos.forEach(produto => {
-                    const artigo = document.createElement('article');
-                    artigo.className = 'product';
-                    artigo.onclick = () => addToCart(); // Clicar adiciona ao carrinho
-
-                    artigo.innerHTML = `
-                        <div class="product-image">
-                            <img src="${produto.imagemUrl}" alt="${produto.nome}">
-                        </div>
-                        <div class="product-info">
-                            <span class="product-name">${produto.nome}</span>
-                            <span class="product-price">${produto.preco.toFixed(2)}€</span>
-                        </div>
-                    `;
-                    
-                    grid.appendChild(artigo);
-                });
-            } catch (erro) {
-                console.error("Erro ao carregar produtos:", erro);
-            }
-        }
-
-        function addToCart() {
-            cartCount++;
-            document.getElementById('cart-count').innerText = cartCount;
-        }
-
-        // Corre a função mal a página abre
-        carregarProdutos();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@ Trabalho Prático 2 de Sistemas Distribuídos — UBI
 
 ```bash
 git clone <url-do-repositorio>
-cd SD-trabalho-pratico2
+cd LojaALimentosSD
 ```
 
 ### 2. Arrancar a base de dados
@@ -52,7 +52,7 @@ docker compose down
 docker compose ps
 
 # Aceder à BD via terminal
-docker exec -it lojasd-db mariadb -u lojasd_user -plojasd_password_local lojasd_db
+docker exec -it lojasd-db mariadb -u lojasd_user -p o lojasd_password_local lojasd_db
 ```
 
 ---
