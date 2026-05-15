@@ -5,10 +5,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Entidade JPA que representa um cliente/utilizador da loja.
- * Segue o mesmo padrão da entidade Produto já existente no projeto.
- */
 @Entity
 @Table(name = "cliente", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
@@ -29,19 +25,23 @@ public class Cliente {
     private String email;
 
     @NotBlank
-    private String password; // Guardada com hash BCrypt
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.CLIENTE; // Por defeito é CLIENTE
+    private Role role = Role.CLIENTE;
 
     public enum Role {
         ADMIN,
         CLIENTE
     }
 
-    // Construtor vazio exigido pelo JPA
     public Cliente() {
+    }
+
+    public Cliente(String nome, String email) {
+        this.nome = nome;
+        this.email = email;
     }
 
     public Cliente(String nome, String email, String password, Role role) {
@@ -50,8 +50,6 @@ public class Cliente {
         this.password = password;
         this.role = role;
     }
-
-    // --- Getters e Setters ---
 
     public Long getId() {
         return id;
