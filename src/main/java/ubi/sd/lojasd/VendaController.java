@@ -30,57 +30,65 @@ public class VendaController {
     @PostMapping("/checkout")
     @Transactional
     public ResponseEntity<?> checkout(@RequestBody CheckoutRequest request, java.security.Principal principal) {
+        // Verifica se o carrinho está vazio
         if (request.getItens() == null || request.getItens().isEmpty()) {
             return ResponseEntity.badRequest().body("Carrinho vazio!");
         }
 
+        // Verifica se o utilizador tem sessão iniciada
         if (principal == null) {
             return ResponseEntity.status(401).body("Utilizador não autenticado.");
         }
 
         try {
-            // Buscar o cliente autenticado pelo email (username no Spring Security)
+            // Obtém o cliente autenticado usando o email
             Cliente cliente = clienteRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Cliente não encontrado."));
 
+            // Inicializa a venda
             Venda venda = new Venda();
             venda.setDataVenda(LocalDateTime.now());
             venda.setCliente(cliente);
             venda.setValorTotal(BigDecimal.ZERO);
             
-            // Guardamos primeiro a venda para ter o ID
+            // Guarda a venda para gerar um ID que os itens possam referenciar
             final Venda vendaSalva = vendaRepository.save(venda);
             
             List<ItemVenda> itensVenda = new ArrayList<>();
             BigDecimal valorTotal = BigDecimal.ZERO;
 
+            // Processa cada item do carrinho
             for (CheckoutItem itemReq : request.getItens()) {
                 Produto produto = produtoRepository.findById(itemReq.getProdutoId())
                         .orElseThrow(() -> new RuntimeException("Produto não encontrado ID: " + itemReq.getProdutoId()));
 
+                // Garante que existe stock suficiente
                 if (produto.getStock() < itemReq.getQuantidade()) {
                     throw new RuntimeException("Stock insuficiente para: " + produto.getNome());
                 }
 
-                // Atualiza Stock
+                // Atualiza e reduz o stock disponível
                 produto.setStock(produto.getStock() - itemReq.getQuantidade());
                 produtoRepository.save(produto);
 
-                // Cria ItemVenda
+                // Cria a relação entre Produto, Venda e Quantidade
                 ItemVenda itemVenda = new ItemVenda();
                 itemVenda.setVenda(vendaSalva);
                 itemVenda.setProduto(produto);
                 itemVenda.setQuantidade(itemReq.getQuantidade());
                 
+                // Calcula o custo do item e soma ao total
                 BigDecimal subtotal = BigDecimal.valueOf(produto.getPreco()).multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
                 valorTotal = valorTotal.add(subtotal);
                 
                 itensVenda.add(itemVenda);
             }
 
+            // Atualiza os dados finais da venda
             vendaSalva.setValorTotal(valorTotal);
             vendaSalva.setItens(itensVenda);
             
+            // Guarda os itens e o valor total na base de dados
             itemVendaRepository.saveAll(itensVenda);
             vendaRepository.save(vendaSalva);
 
@@ -92,6 +100,7 @@ public class VendaController {
 
     @GetMapping("/{id}/fatura")
     public ResponseEntity<String> emitirFatura(@PathVariable Long id, java.security.Principal principal) {
+        // Acesso restrito a utilizadores autenticados
         if (principal == null) {
             return ResponseEntity.status(401).body("Utilizador não autenticado.");
         }
@@ -100,12 +109,12 @@ public class VendaController {
             Venda venda = vendaRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Venda não encontrada."));
 
-            // Verificar se a venda pertence ao cliente (ou se é admin)
+            // Impede que um utilizador veja faturas de outros (segurança)
             if (!venda.getCliente().getEmail().equals(principal.getName())) {
-                // Num sistema real verificaríamos as roles, mas assumindo apenas clientes por agora
                 return ResponseEntity.status(403).body("Acesso negado.");
             }
 
+            // Constrói a estrutura HTML da fatura
             StringBuilder fatura = new StringBuilder();
             fatura.append("<!DOCTYPE html><html lang='pt'><head><meta charset='UTF-8'><title>Fatura #").append(venda.getId()).append("</title>");
             fatura.append("<link rel='stylesheet' href='/style.css'><style>");
@@ -130,6 +139,7 @@ public class VendaController {
             fatura.append("<table class='fatura-table'>");
             fatura.append("<thead><tr><th>Produto</th><th>Qtd</th><th style='text-align:right'>Subtotal</th></tr></thead><tbody>");
             
+            // Preenche a tabela com os produtos comprados
             for (ItemVenda item : venda.getItens()) {
                 BigDecimal subtotal = BigDecimal.valueOf(item.getProduto().getPreco())
                         .multiply(BigDecimal.valueOf(item.getQuantidade()));
