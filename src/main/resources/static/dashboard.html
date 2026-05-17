@@ -46,6 +46,10 @@
                 <h3>Faturado (Total)</h3>
                 <p id="faturado-total">0.00€</p>
             </div>
+            <div class="kpi-card">
+                <h3>Ticket Médio</h3>
+                <p id="ticket-medio">0.00€</p>
+            </div>
         </div>
 
         <div class="tables-container">
@@ -72,6 +76,30 @@
                     <tbody id="top-clientes-body"></tbody>
                 </table>
             </div>
+
+            <div class="data-table-box">
+                <h3>Vendas por Categoria</h3>
+                <table>
+                    <thead><tr><th>Categoria</th><th>Faturado</th></tr></thead>
+                    <tbody id="vendas-categoria-body"></tbody>
+                </table>
+            </div>
+
+            <div class="data-table-box">
+                <h3 style="color: #d32f2f;">Alerta: Stock Crítico</h3>
+                <table>
+                    <thead><tr><th>Produto</th><th>Stock Restante</th></tr></thead>
+                    <tbody id="stock-critico-body"></tbody>
+                </table>
+            </div>
+
+            <div class="data-table-box">
+                <h3>Clientes Inativos</h3>
+                <table>
+                    <thead><tr><th>Email</th><th>Dias sem Comprar</th></tr></thead>
+                    <tbody id="clientes-inativos-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -85,6 +113,7 @@
                 document.getElementById('faturado-semana').innerText = stats.faturadoSemana.toFixed(2) + '€';
                 document.getElementById('faturado-mes').innerText = stats.faturadoMes.toFixed(2) + '€';
                 document.getElementById('faturado-total').innerText = stats.faturadoTotal.toFixed(2) + '€';
+                document.getElementById('ticket-medio').innerText = stats.ticketMedio.toFixed(2) + '€';
 
                 populateTable('top-produtos-body', stats.produtosMaisVendidos, ['nome', 'quantidade']);
                 populateTable('bottom-produtos-body', stats.produtosMenosVendidos, ['nome', 'quantidade']);
@@ -94,6 +123,15 @@
                 stats.melhoresClientes.forEach(c => {
                     tbodyClientes.innerHTML += `<tr><td>${c.email}</td><td>${c.totalComprado.toFixed(2)}€</td></tr>`;
                 });
+
+                const tbodyCategoria = document.getElementById('vendas-categoria-body');
+                tbodyCategoria.innerHTML = '';
+                stats.vendasPorCategoria.forEach(c => {
+                    tbodyCategoria.innerHTML += `<tr><td>${c.categoria}</td><td>${c.totalVendido.toFixed(2)}€</td></tr>`;
+                });
+
+                populateTable('stock-critico-body', stats.stockCritico, ['nome', 'stock']);
+                populateTable('clientes-inativos-body', stats.clientesInativos, ['email', 'diasInativo']);
 
             } catch (err) {
                 console.error("Erro ao carregar estatísticas", err);
