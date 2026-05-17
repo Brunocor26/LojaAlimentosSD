@@ -307,7 +307,8 @@ async function finalizarCompra() {
         });
 
         if (resposta.ok) {
-            showSuccessState();
+            const venda = await resposta.json();
+            showSuccessState(venda.id);
             cartItems = [];
             cartCount = 0;
             updateCartCountUI();
@@ -322,13 +323,19 @@ async function finalizarCompra() {
     }
 }
 
-function showSuccessState() {
+function showSuccessState(vendaId) {
     const modalContent = cartModal.querySelector('.modal-content');
     modalContent.innerHTML = `
         <div class="success-message">
             <div class="success-icon">✓</div>
             <h2>OBRIGADO!</h2>
             <p>A tua compra foi processada com sucesso.</p>
+            ${vendaId ? `
+            <div style="margin: 20px 0;">
+                <a href="/api/vendas/${vendaId}/fatura" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                    📄 Ver/Imprimir Fatura
+                </a>
+            </div>` : ''}
             <button class="checkout-button" id="btn-continuar">CONTINUAR A COMPRAR</button>
         </div>
     `;
