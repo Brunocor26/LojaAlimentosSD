@@ -18,8 +18,8 @@ public class Venda {
     private BigDecimal valorTotal;
 
     @ManyToOne
-    @JoinColumn(name = "id_cliente")
-    private Cliente cliente;
+    @JoinColumn(name = "id_user")
+    private User user;
 
     @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL)
     private List<ItemVenda> itens;
@@ -27,10 +27,10 @@ public class Venda {
     public Venda() {
     }
 
-    public Venda(LocalDateTime dataVenda, BigDecimal valorTotal, Cliente cliente) {
+    public Venda(LocalDateTime dataVenda, BigDecimal valorTotal, User user) {
         this.dataVenda = dataVenda;
         this.valorTotal = valorTotal;
-        this.cliente = cliente;
+        this.user = user;
     }
 
     public Long getId() {
@@ -57,12 +57,12 @@ public class Venda {
         this.valorTotal = valorTotal;
     }
 
-    public Cliente getCliente() {
-        return cliente;
+    public User getUser() {
+        return user;
     }
 
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public List<ItemVenda> getItens() {

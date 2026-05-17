@@ -1,12 +1,12 @@
 package ubi.sd.lojasd.controller;
 import ubi.sd.lojasd.model.ItemVenda;
-import ubi.sd.lojasd.model.Cliente;
+import ubi.sd.lojasd.model.User;
 import ubi.sd.lojasd.repository.ItemVendaRepository;
 import ubi.sd.lojasd.model.Venda;
 import ubi.sd.lojasd.repository.ProdutoRepository;
 import ubi.sd.lojasd.dto.CheckoutItem;
 import ubi.sd.lojasd.dto.CheckoutRequest;
-import ubi.sd.lojasd.repository.ClienteRepository;
+import ubi.sd.lojasd.repository.UserRepository;
 import ubi.sd.lojasd.repository.VendaRepository;
 import ubi.sd.lojasd.model.Produto;
 
@@ -38,7 +38,7 @@ public class VendaController {
     private ProdutoRepository produtoRepository;
 
     @Autowired
-    private ClienteRepository clienteRepository;
+    private UserRepository userRepository;
 
     @PostMapping("/checkout")
     @Transactional
@@ -52,15 +52,14 @@ public class VendaController {
         }
 
         String email = principal.getName();
-        Cliente cliente = clienteRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado para o email: " + email));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilizador não encontrado para o email: " + email));
 
         Venda venda = new Venda();
         venda.setDataVenda(LocalDateTime.now());
-        venda.setCliente(cliente);
+        venda.setUser(user);
         venda.setValorTotal(BigDecimal.ZERO);
         
-        // Guardamos primeiro a venda para ter o ID
         final Venda vendaSalva = vendaRepository.save(venda);
         
         List<ItemVenda> itensVenda = new ArrayList<>();
@@ -74,11 +73,9 @@ public class VendaController {
                 throw new RuntimeException("Stock insuficiente para o produto: " + produto.getNome());
             }
 
-            // Atualiza Stock
             produto.setStock(produto.getStock() - itemReq.getQuantidade());
             produtoRepository.save(produto);
 
-            // Cria ItemVenda
             ItemVenda itemVenda = new ItemVenda();
             itemVenda.setVenda(vendaSalva);
             itemVenda.setProduto(produto);

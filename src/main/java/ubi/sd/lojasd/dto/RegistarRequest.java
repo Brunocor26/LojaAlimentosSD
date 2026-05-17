@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO para o pedido de registo de um novo cliente.
+ * DTO para o pedido de registo de um novo utilizador.
  * Usado no endpoint POST /api/auth/registar
  */
 public record RegistarRequest(
@@ -20,6 +20,8 @@ public record RegistarRequest(
 
         @NotBlank(message = "A password é obrigatória")
         @Size(min = 6, message = "A password deve ter no mínimo 6 caracteres")
-        String password
+        String password,
+
+        String role
 ) {
 }

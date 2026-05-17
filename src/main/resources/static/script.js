@@ -23,46 +23,63 @@ const qtyMinus = document.getElementById('qty-minus');
 const qtyPlus = document.getElementById('qty-plus');
 const addToCartBtn = document.getElementById('add-to-cart-btn');
 
-// Função para carregar produtos
+// Função para carregar produtos agrupados por categoria
 async function carregarProdutos() {
-    console.log("Iniciando carregamento de produtos...");
+    console.log("Iniciando carregamento de produtos e categorias...");
     try {
-        const resposta = await fetch('/api/produtos');
-        console.log("Resposta da API recebida:", resposta.status);
-        allProducts = await resposta.json();
-        console.log("Produtos carregados:", allProducts.length);
+        // Carregar categorias e produtos em paralelo
+        const [respCat, respProd] = await Promise.all([
+            fetch('/api/categorias'),
+            fetch('/api/produtos')
+        ]);
 
-        const grid = document.getElementById('grid-produtos');
-        if (!grid) {
-            console.error("ERRO: Elemento 'grid-produtos' não encontrado!");
-            return;
-        }
-        grid.innerHTML = '';
-allProducts.forEach(produto => {
-    console.log("Renderizando produto:", produto.nome);
-    const artigo = document.createElement('article');
-    artigo.className = 'product';
-            if (produto.stock <= 0) {
-                artigo.classList.add('out-of-stock');
-            }
+        const categorias = await respCat.json();
+        allProducts = await respProd.json();
 
-            artigo.onclick = () => openProductModal(produto);
+        const container = document.getElementById('container-categorias');
+        if (!container) return;
+        container.innerHTML = '';
 
-            artigo.innerHTML = `
-                <div class="product-image">
-                    <img src="${produto.imagemUrl}" alt="${produto.nome}">
-                </div>
-                <div class="product-info">
-                    <div class="product-main-info">
-                        <span class="product-name">${produto.nome}</span>
-                        <span class="product-price">${produto.preco.toFixed(2)}€</span>
-                    </div>
-                    <span class="product-stock">${produto.stock > 0 ? `Stock: ${produto.stock} unidades` : 'Sem Stock'}</span>
-                </div>
-            `;
+        // Filtrar categorias que têm produtos
+        categorias.forEach(categoria => {
+            const produtosDaCategoria = allProducts.filter(p => p.categoria && p.categoria.id === categoria.id);
             
-            grid.appendChild(artigo);
+            if (produtosDaCategoria.length > 0) {
+                const section = document.createElement('section');
+                section.className = 'categoria-section';
+                
+                section.innerHTML = `
+                    <h2 class="categoria-titulo">${categoria.nome}</h2>
+                    <div class="product-grid"></div>
+                `;
+                
+                const grid = section.querySelector('.product-grid');
+                
+                produtosDaCategoria.forEach(produto => {
+                    const artigo = document.createElement('article');
+                    artigo.className = 'product';
+                    if (produto.stock <= 0) artigo.classList.add('out-of-stock');
+                    
+                    artigo.onclick = () => openProductModal(produto);
+                    artigo.innerHTML = `
+                        <div class="product-image">
+                            <img src="${produto.imagemUrl}" alt="${produto.nome}">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-main-info">
+                                <span class="product-name">${produto.nome}</span>
+                                <span class="product-price">${produto.preco.toFixed(2)}€</span>
+                            </div>
+                            <span class="product-stock">${produto.stock > 0 ? `Stock: ${produto.stock} unidades` : 'Sem Stock'}</span>
+                        </div>
+                    `;
+                    grid.appendChild(artigo);
+                });
+                
+                container.appendChild(section);
+            }
         });
+
     } catch (erro) {
         console.error("Erro ao carregar produtos:", erro);
     }
@@ -121,7 +138,8 @@ addToCartBtn.onclick = () => {
 };
 
 function updateCartUI() {
-    document.getElementById('cart-count').innerText = cartCount;
+    const countElem = document.getElementById('cart-count');
+    if (countElem) countElem.innerText = cartCount;
     
     // Garantir que mostramos o conteúdo normal do carrinho (caso estivesse em modo sucesso)
     const modalContent = cartModal.querySelector('.modal-content');
@@ -201,11 +219,13 @@ function removeFromCart(produtoId) {
 }
 
 // Abrir/Fechar Modais
-cartButton.onclick = () => {
-    updateCartUI();
-    cartModal.style.display = "block";
-};
-closeProduct.onclick = () => productModal.style.display = "none";
+if (cartButton) {
+    cartButton.onclick = () => {
+        updateCartUI();
+        cartModal.style.display = "block";
+    };
+}
+if (closeProduct) closeProduct.onclick = () => productModal.style.display = "none";
 
 window.onclick = (event) => {
     if (event.target == cartModal) cartModal.style.display = "none";
@@ -239,7 +259,8 @@ async function finalizarCompra() {
             showSuccessState();
             cartItems = [];
             cartCount = 0;
-            document.getElementById('cart-count').innerText = "0";
+            const countElem = document.getElementById('cart-count');
+            if (countElem) countElem.innerText = "0";
             carregarProdutos(); // Recarregar para atualizar stocks
         } else {
             const erroMsg = await resposta.text();

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão — FOOD</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container { padding: 40px 10%; }
+        h1 { text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; font-size: 20px; }
+        .form-section { background: #f9f9f9; padding: 25px; margin-bottom: 40px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; outline: none; }
+        button { background: #000; color: #fff; border: none; padding: 12px 25px; cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
+        button:hover { background: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { text-transform: uppercase; font-size: 11px; color: #666; }
+        .btn-delete { background: #c00; padding: 5px 10px; font-size: 9px; }
+        .preview-img { max-width: 100px; max-height: 100px; margin-top: 10px; display: none; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/index.html" class="logo">FOOD</a>
+        <div class="nav-direita">
+            <span id="nome-utilizador"></span>
+            <button onclick="fazerLogout()">Sair</button>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <h1>Gestão de Inventário (Colaborador)</h1>
+
+        <section class="form-section">
+            <h2>Adicionar Novo Produto</h2>
+            <form id="form-produto">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="p-nome" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="p-descricao" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Preço (€)</label>
+                    <input type="number" id="p-preco" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" id="p-stock" required>
+                </div>
+                <div class="form-group">
+                    <label>Imagem do Produto</label>
+                    <input type="file" id="p-imagem-file" accept="image/*" required onchange="previewImage(this)">
+                    <img id="img-preview" class="preview-img" src="" alt="Preview">
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="p-categoria" required onchange="toggleNovaCategoria(this.value)">
+                        <option value="">Selecione...</option>
+                        <!-- Carregado via JS -->
+                        <option value="NEW" style="font-weight: bold; color: #c00;">+ Criar Nova Categoria</option>
+                    </select>
+                </div>
+
+                <div id="div-nova-categoria" style="display: none; border-left: 2px solid #000; padding-left: 15px; margin-top: 10px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Nome da Nova Categoria</label>
+                        <input type="text" id="new-cat-nome">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição da Nova Categoria</label>
+                        <input type="text" id="new-cat-descricao">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit">Guardar Produto</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Produtos Existentes</h2>
+            <table id="tabela-produtos">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Nome</th>
+                        <th>Stock</th>
+                        <th>Preço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('img-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        function toggleNovaCategoria(val) {
+            const div = document.getElementById('div-nova-categoria');
+            const nomeInput = document.getElementById('new-cat-nome');
+            if (val === 'NEW') {
+                div.style.display = 'block';
+                nomeInput.required = true;
+            } else {
+                div.style.display = 'none';
+                nomeInput.required = false;
+            }
+        }
+
+        verificarAutenticacao().then(user => {
+            if (!user || user.role !== 'ADMIN') {
+                alert("Acesso negado. Apenas colaboradores podem aceder a esta página.");
+                window.location.href = '/index.html';
+            } else {
+                document.getElementById('nome-utilizador').textContent = user.nome;
+                carregarDadosIniciais();
+            }
+        });
+
+        async function carregarDadosIniciais() {
+            const select = document.getElementById('p-categoria');
+            while (select.options.length > 2) {
+                select.remove(1);
+            }
+
+            const respCat = await fetch('/api/categorias');
+            const categorias = await respCat.json();
+            
+            categorias.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nome;
+                select.add(opt, select.options[select.options.length - 1]);
+            });
+
+            atualizarTabela();
+        }
+
+        async function atualizarTabela() {
+            const resp = await fetch('/api/produtos');
+            const produtos = await resp.json();
+            const tbody = document.querySelector('#tabela-produtos tbody');
+            tbody.innerHTML = '';
+            produtos.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><img src="${p.imagemUrl}" style="width: 40px; height: 40px; object-fit: cover;"></td>
+                    <td>${p.nome}</td>
+                    <td>${p.stock}</td>
+                    <td>${p.preco.toFixed(2)}€</td>
+                    <td><button class="btn-delete" onclick="eliminarProduto(${p.id})">Eliminar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('form-produto').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.textContent = "A guardar...";
+            
+            try {
+                let categoriaId = document.getElementById('p-categoria').value;
+
+                if (categoriaId === 'NEW') {
+                    const novaCat = {
+                        nome: document.getElementById('new-cat-nome').value,
+                        descricao: document.getElementById('new-cat-descricao').value
+                    };
+                    
+                    const resCat = await fetch('/api/categorias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(novaCat)
+                    });
+
+                    if (resCat.ok) {
+                        const catCriada = await resCat.json();
+                        categoriaId = catCriada.id;
+                    } else {
+                        const erro = await resCat.json();
+                        alert("Erro ao criar categoria: " + (erro.erro || "Verifique o nome"));
+                        btn.disabled = false;
+                        btn.textContent = "Guardar Produto";
+                        return;
+                    }
+                }
+
+                // 1. Upload da Imagem
+                const fileInput = document.getElementById('p-imagem-file');
+                const formData = new FormData();
+                formData.append('imagem', fileInput.files[0]);
+
+                const respUpload = await fetch('/api/produtos/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!respUpload.ok) {
+                    alert("Erro ao fazer upload da imagem.");
+                    btn.disabled = false;
+                    btn.textContent = "Guardar Produto";
+                    return;
+                }
+
+                const dadosUpload = await respUpload.json();
+                const imagemUrl = dadosUpload.caminho;
+
+                // 2. Criar Produto
+                const payload = {
+                    nome: document.getElementById('p-nome').value,
+                    descricao: document.getElementById('p-descricao').value,
+                    preco: parseFloat(document.getElementById('p-preco').value),
+                    stock: parseInt(document.getElementById('p-stock').value),
+                    imagemUrl: imagemUrl,
+                    categoriaId: parseInt(categoriaId)
+                };
+
+                const resp = await fetch('/api/produtos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (resp.ok) {
+                    alert("Produto guardado com sucesso!");
+                    document.getElementById('form-produto').reset();
+                    document.getElementById('img-preview').style.display = 'none';
+                    toggleNovaCategoria('');
+                    carregarDadosIniciais();
+                } else {
+                    alert("Erro ao guardar produto.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erro inesperado.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Guardar Produto";
+            }
+        };
+
+        async function eliminarProduto(id) {
+            if (confirm("Tem a certeza que deseja eliminar este produto?")) {
+                const resp = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+                if (resp.ok) {
+                    atualizarTabela();
+                } else {
+                    alert("Erro ao eliminar produto.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>

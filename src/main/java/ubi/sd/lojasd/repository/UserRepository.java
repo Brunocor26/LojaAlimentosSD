@@ -1,5 +1,5 @@
 package ubi.sd.lojasd.repository;
-import ubi.sd.lojasd.model.Cliente;
+import ubi.sd.lojasd.model.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<Cliente> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
 }

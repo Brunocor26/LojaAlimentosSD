@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "cliente", uniqueConstraints = {
+@Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-public class Cliente {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,15 +36,15 @@ public class Cliente {
         CLIENTE
     }
 
-    public Cliente() {
+    public User() {
     }
 
-    public Cliente(String nome, String email) {
+    public User(String nome, String email) {
         this.nome = nome;
         this.email = email;
     }
 
-    public Cliente(String nome, String email, String password, Role role) {
+    public User(String nome, String email, String password, Role role) {
         this.nome = nome;
         this.email = email;
         this.password = password;
