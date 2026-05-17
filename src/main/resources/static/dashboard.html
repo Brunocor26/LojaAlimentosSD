@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas da Loja</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+        .dashboard-header { margin-bottom: 50px; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+        .kpi-cards { display: flex; gap: 2vw; margin-bottom: 50px; }
+        .kpi-card { border: 1px solid #000; padding: 20px; flex: 1; text-align: center; }
+        .kpi-card h3 { margin: 0 0 10px 0; font-size: 12px; color: #666; text-transform: uppercase; }
+        .kpi-card p { margin: 0; font-size: 24px; font-weight: bold; color: #000; }
+        
+        .tables-container { display: flex; gap: 2vw; flex-wrap: wrap; }
+        .data-table-box { border: 1px solid #000; padding: 20px; flex: 1; min-width: 300px; }
+        .data-table-box h3 { margin-top: 0; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { text-align: left; padding: 10px 0; border-bottom: 1px solid #eee; }
+        th { text-transform: uppercase; color: #666; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">LOJA SD</a>
+        <div>Dashboard</div>
+    </header>
+    <div class="dashboard-container">
+        <h1 class="dashboard-header">Estatísticas da Loja</h1>
+        
+        <div class="kpi-cards">
+            <div class="kpi-card">
+                <h3>Faturado (Dia)</h3>
+                <p id="faturado-dia">0.00€</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Faturado (Semana)</h3>
+                <p id="faturado-semana">0.00€</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Faturado (Mês)</h3>
+                <p id="faturado-mes">0.00€</p>
+            </div>
+            <div class="kpi-card">
+                <h3>Faturado (Total)</h3>
+                <p id="faturado-total">0.00€</p>
+            </div>
+        </div>
+
+        <div class="tables-container">
+            <div class="data-table-box">
+                <h3>Produtos Mais Vendidos</h3>
+                <table>
+                    <thead><tr><th>Produto</th><th>Qtd</th></tr></thead>
+                    <tbody id="top-produtos-body"></tbody>
+                </table>
+            </div>
+
+            <div class="data-table-box">
+                <h3>Produtos Menos Vendidos</h3>
+                <table>
+                    <thead><tr><th>Produto</th><th>Qtd</th></tr></thead>
+                    <tbody id="bottom-produtos-body"></tbody>
+                </table>
+            </div>
+
+            <div class="data-table-box">
+                <h3>Melhores Clientes</h3>
+                <table>
+                    <thead><tr><th>Email</th><th>Total Comprado</th></tr></thead>
+                    <tbody id="top-clientes-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadEstatisticas() {
+            try {
+                const resposta = await fetch('/api/estatisticas');
+                const stats = await resposta.json();
+
+                document.getElementById('faturado-dia').innerText = stats.faturadoDia.toFixed(2) + '€';
+                document.getElementById('faturado-semana').innerText = stats.faturadoSemana.toFixed(2) + '€';
+                document.getElementById('faturado-mes').innerText = stats.faturadoMes.toFixed(2) + '€';
+                document.getElementById('faturado-total').innerText = stats.faturadoTotal.toFixed(2) + '€';
+
+                populateTable('top-produtos-body', stats.produtosMaisVendidos, ['nome', 'quantidade']);
+                populateTable('bottom-produtos-body', stats.produtosMenosVendidos, ['nome', 'quantidade']);
+                
+                const tbodyClientes = document.getElementById('top-clientes-body');
+                tbodyClientes.innerHTML = '';
+                stats.melhoresClientes.forEach(c => {
+                    tbodyClientes.innerHTML += `<tr><td>${c.email}</td><td>${c.totalComprado.toFixed(2)}€</td></tr>`;
+                });
+
+            } catch (err) {
+                console.error("Erro ao carregar estatísticas", err);
+            }
+        }
+
+        function populateTable(bodyId, data, keys) {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                keys.forEach(k => {
+                    const td = document.createElement('td');
+                    td.innerText = item[k];
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        loadEstatisticas();
+    </script>
+</body>
+</html>

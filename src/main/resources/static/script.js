@@ -26,42 +26,84 @@ const addToCartBtn = document.getElementById('add-to-cart-btn');
 // Guardar o HTML original do carrinho para poder restaurar após sucesso
 const originalCartHTML = cartModal.querySelector('.modal-content').innerHTML;
 
-// Função para carregar produtos
+let allCategories = [];
+
+// Função para carregar produtos e categorias
 async function carregarProdutos() {
     try {
-        const resposta = await fetch('/api/produtos');
-        allProducts = await resposta.json();
+        // Obter categorias e produtos em paralelo
+        const [resCategorias, resProdutos] = await Promise.all([
+            fetch('/api/categorias'),
+            fetch('/api/produtos')
+        ]);
         
-        const grid = document.getElementById('grid-produtos');
-        if (!grid) return;
-        grid.innerHTML = '';
+        allCategories = await resCategorias.json();
+        allProducts = await resProdutos.json();
+        
+        const container = document.getElementById('categories-container');
+        if (!container) return;
+        container.innerHTML = '';
 
-        allProducts.forEach(produto => {
-            const artigo = document.createElement('article');
-            artigo.className = 'product';
-            if (produto.stock <= 0) {
-                artigo.classList.add('out-of-stock');
+        // Se não houver categorias, cria uma categoria "Outros" fictícia
+        if (allCategories.length === 0) {
+            allCategories = [{ id: null, nome: 'Todos os Produtos' }];
+        }
+
+        allCategories.forEach(categoria => {
+            // Filtrar produtos que pertencem a esta categoria
+            // Considerando que Produto tem id_categoria. Se for null, entra em "Outros"
+            let produtosDaCategoria;
+            if (categoria.id === null) {
+                produtosDaCategoria = allProducts;
+            } else {
+                produtosDaCategoria = allProducts.filter(p => p.id_categoria === categoria.id);
             }
 
-            artigo.onclick = () => openProductModal(produto);
+            if (produtosDaCategoria.length === 0) return; // Não mostrar categorias vazias
 
-            artigo.innerHTML = `
-                <div class="product-image">
-                    <img src="${produto.imagemUrl}" alt="${produto.nome}">
-                </div>
-                <div class="product-info">
-                    <div class="product-main-info">
-                        <span class="product-name">${produto.nome}</span>
-                        <span class="product-price">${produto.preco.toFixed(2)}€</span>
+            // Criar secção da categoria
+            const section = document.createElement('section');
+            section.className = 'category-section';
+
+            const title = document.createElement('h2');
+            title.className = 'category-title';
+            title.innerText = categoria.nome;
+            section.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'product-grid';
+
+            produtosDaCategoria.forEach(produto => {
+                const artigo = document.createElement('article');
+                artigo.className = 'product';
+                if (produto.stock <= 0) {
+                    artigo.classList.add('out-of-stock');
+                }
+
+                artigo.onclick = () => openProductModal(produto);
+
+                artigo.innerHTML = `
+                    <div class="product-image">
+                        <img src="${produto.imagemUrl}" alt="${produto.nome}">
                     </div>
-                    <span class="product-stock">${produto.stock > 0 ? `Stock: ${produto.stock} unidades` : 'Sem Stock'}</span>
-                </div>
-            `;
-            
-            grid.appendChild(artigo);
+                    <div class="product-info">
+                        <div class="product-main-info">
+                            <span class="product-name">${produto.nome}</span>
+                            <span class="product-price">${produto.preco.toFixed(2)}€</span>
+                        </div>
+                        <span class="product-stock">${produto.stock > 0 ? `Stock: ${produto.stock} unidades` : 'Sem Stock'}</span>
+                    </div>
+                `;
+                
+                grid.appendChild(artigo);
+            });
+
+            section.appendChild(grid);
+            container.appendChild(section);
         });
+
     } catch (erro) {
-        console.error("Erro ao carregar produtos:", erro);
+        console.error("Erro ao carregar dados:", erro);
     }
 }
 
